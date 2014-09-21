@@ -24,7 +24,6 @@ state("ePSXe")
 
 	byte finalBossHp : "ePSXe.exe", 0x6FE94C;
 	byte win : "ePSXe.exe", 0x6FE949;
-	byte positionOnMap : "ePSXe.exe", 0x84F920;
 }
 
 start
