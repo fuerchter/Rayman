@@ -28,22 +28,24 @@ state("ePSXe")
 
 start
 {
-	if(old.startingLevel==0 && current.startingLevel==1)
+	//FUNCTIONS
+
+	current.isStartingLevel = new Func<dynamic, dynamic, bool>((oldState, currentState) => 
+		oldState.startingLevel==0 && currentState.startingLevel==1 &&
+			oldState.inLevel==0 && currentState.inLevel==0 && //Fixes cases 2-4
+			oldState.inCutscene==0 && currentState.inCutscene==0 && //Fixes case 5
+			oldState.inContinue==0 && currentState.inContinue==0 //Fixes case 6
+	);
+
+	//Don't split on first Pink Plant Woods entry and Eraser Plains reentries
+	current.entryExceptions = new Func<dynamic, bool>((currentState) => 
+		(currentState.positionOnMap==0 && currentState.cageCount==0) || (currentState.positionOnMap==11 && currentState.cageCount==67)
+	);
+
+
+	if(current.isStartingLevel(old, current))
 	{
-		if(	old.inLevel==0 && current.inLevel==0 && //Fixes cases 2-4
-			old.inCutscene==0 && current.inCutscene==0 && //Fixes case 5
-			old.inContinue==0 && current.inContinue==0) //Fixes case 6
-		{
-			//Don't split on first Pink Plant Woods entry and Eraser Plains reentries
-			if((current.positionOnMap==0 && current.cageCount==0) || (current.positionOnMap==11 && current.cageCount==67))
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
-		}
+		return !current.entryExceptions(current);
 	}
 
 	return false;
@@ -51,22 +53,9 @@ start
 
 split
 {
-	if(old.startingLevel==0 && current.startingLevel==1)
+	if(current.isStartingLevel(old, current))
 	{
-		if(	old.inLevel==0 && current.inLevel==0 && //Fixes cases 2-4
-			old.inCutscene==0 && current.inCutscene==0 && //Fixes case 5
-			old.inContinue==0 && current.inContinue==0) //Fixes case 6
-		{
-			//Don't split on first Pink Plant Woods entry and Eraser Plains reentries
-			if((current.positionOnMap==0 && current.cageCount==0) || (current.positionOnMap==11 && current.cageCount==67))
-			{
-				return false;
-			}
-			else
-			{
-				return true;
-			}
-		}
+		return !current.entryExceptions(current);
 	}
 
 	//Final Split
@@ -87,14 +76,9 @@ isLoading
 {
 	//Current load timing: When entering a Level to actually having control
 	//Doesn't work when starting splits from a Level instead of menu!
-	if(old.startingLevel==0 && current.startingLevel==1)
+	if(current.isStartingLevel(old, current))
 	{
-		if(	old.inLevel==0 && current.inLevel==0 && //Fixes cases 2-4
-			old.inCutscene==0 && current.inCutscene==0 && //Fixes case 5
-			old.inContinue==0 && current.inContinue==0) //Fixes case 6
-		{
-			current.loading=true;
-		}
+		current.loading=true;
 	}
 
 	if(current.loading && current.inLevel==1)
