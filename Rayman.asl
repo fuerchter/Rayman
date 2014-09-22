@@ -1,6 +1,7 @@
 state("ePSXe")
 {
 	//Still splitting in menu!
+	//Main menu higher number than submenus?
 
 	/*
 		Activity:
@@ -14,6 +15,8 @@ state("ePSXe")
 		6.	continue -> ingame			0
 	*/
 	byte startingLevel : "ePSXe.exe", 0x84F990;
+	byte notInMenu : "ePSXe.exe", 0x82F3F0;
+	byte menuScreenNo : "ePSXe.exe", 0x84FB40;
 
 	byte inLevel : "ePSXe.exe", 0x826821;
 
@@ -30,6 +33,11 @@ start
 {
 	//FUNCTIONS
 
+	current.isStarting = new Func<dynamic, dynamic, bool>((oldState, currentState) => 
+		oldState.startingLevel==0 && currentState.startingLevel==1 &&
+			currentState.menuScreenNo==4 && oldState.notInMenu==0
+	);
+
 	current.isStartingLevel = new Func<dynamic, dynamic, bool>((oldState, currentState) => 
 		oldState.startingLevel==0 && currentState.startingLevel==1 &&
 			oldState.inLevel==0 && currentState.inLevel==0 && //Fixes cases 2-4
@@ -37,25 +45,15 @@ start
 			oldState.inContinue==0 && currentState.inContinue==0 //Fixes case 6
 	);
 
-	//Don't split on first Pink Plant Woods entry and Eraser Plains reentries
-	current.entryExceptions = new Func<dynamic, bool>((currentState) => 
-		(currentState.positionOnMap==0 && currentState.cageCount==0) || (currentState.positionOnMap==11 && currentState.cageCount==67)
-	);
-
-
-	if(current.isStartingLevel(old, current))
-	{
-		return !current.entryExceptions(current);
-	}
-
-	return false;
+	return current.isStarting(old, current);
 }
 
 split
 {
 	if(current.isStartingLevel(old, current))
 	{
-		return !current.entryExceptions(current);
+		//Don't split on first Pink Plant Woods entry and Eraser Plains reentries
+		return !(current.positionOnMap==0 && current.cageCount==0) || (current.positionOnMap==11 && current.cageCount==67);
 	}
 
 	//Final Split
@@ -76,7 +74,7 @@ isLoading
 {
 	//Current load timing: When entering a Level to actually having control
 	//Doesn't work when starting splits from a Level instead of menu!
-	if(current.isStartingLevel(old, current))
+	if(current.isStartingLevel(old, current) && !current.isStarting(old, current))
 	{
 		current.loading=true;
 	}
