@@ -31,8 +31,11 @@ state("ePSXe")
 
 start
 {
+	current.loading=false;
+	current.moskitoEntries=0;
+	current.eraserEntries=0;
+	
 	//FUNCTIONS
-
 	current.isStarting = new Func<dynamic, dynamic, bool>((oldState, currentState) => 
 		oldState.startingLevel==0 && currentState.startingLevel==1 &&
 			currentState.menuScreenNo==4 && oldState.notInMenu==0
@@ -52,8 +55,36 @@ split
 {
 	if(current.isStartingLevel(old, current))
 	{
-		//Don't split on first Pink Plant Woods entry and Eraser Plains reentries
-		return !(current.positionOnMap==0 && current.cageCount==0) || (current.positionOnMap==11 && current.cageCount==67);
+		if(current.positionOnMap==0 && current.cageCount==0) //Don't split on first Pink Plant Woods entry
+		{
+			return false;
+		}
+		if(current.positionOnMap==3)
+		{
+			if(current.moskitoEntries<2) //Only split for two Moskito entries
+			{
+				current.moskitoEntries++;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		if(current.positionOnMap==11) //Only split for one Eraser entry
+		{
+			if(current.eraserEntries<1)
+			{
+				current.eraserEntries++;
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		
+		return true;
 	}
 
 	//Final Split
